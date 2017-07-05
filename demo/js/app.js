@@ -12,11 +12,11 @@ particlesJS.load('particles-js', 'particles.json', function() {
 /* Otherwise just put the config content (json): */
 
 particlesJS('particles-js',
-  
+
   {
     "particles": {
       "number": {
-        "value": 80,
+        "value": 100,
         "density": {
           "enable": true,
           "value_area": 800
@@ -40,9 +40,15 @@ particlesJS('particles-js',
           "height": 100
         }
       },
+      "glow": {
+        "width": 15,
+        "color": '#ffffff',
+        "intensity": 0.3,
+        "random": true
+      },
       "opacity": {
-        "value": 0.5,
-        "random": false,
+        "value": 1,
+        "random": true,
         "anim": {
           "enable": false,
           "speed": 1,
@@ -51,7 +57,7 @@ particlesJS('particles-js',
         }
       },
       "size": {
-        "value": 5,
+        "value": 3,
         "random": true,
         "anim": {
           "enable": false,
@@ -86,7 +92,7 @@ particlesJS('particles-js',
       "events": {
         "onhover": {
           "enable": true,
-          "mode": "repulse"
+          "mode": "bubble"
         },
         "onclick": {
           "enable": true,
@@ -102,10 +108,11 @@ particlesJS('particles-js',
           }
         },
         "bubble": {
-          "distance": 400,
-          "size": 40,
+          "distance": 350,
+          "size": 7,
           "duration": 2,
           "opacity": 8,
+          "glow": 50,
           "speed": 3
         },
         "repulse": {

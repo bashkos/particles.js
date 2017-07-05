@@ -44,6 +44,12 @@ var pJS = function(tag_id, params){
           height: 100
         }
       },
+      glow: {
+        width: 0,
+        color: '#ffffff',
+        intensity: 0.5,
+        random: false,
+      },
       opacity: {
         value: 1,
         random: false,
@@ -157,9 +163,9 @@ var pJS = function(tag_id, params){
   pJS.fn.retinaInit = function(){
 
     if(pJS.retina_detect && window.devicePixelRatio > 1){
-      pJS.canvas.pxratio = window.devicePixelRatio; 
+      pJS.canvas.pxratio = window.devicePixelRatio;
       pJS.tmp.retina = true;
-    } 
+    }
     else{
       pJS.canvas.pxratio = 1;
       pJS.tmp.retina = false;
@@ -238,7 +244,7 @@ var pJS = function(tag_id, params){
 
   /* --------- pJS functions - particles ----------- */
 
-  pJS.fn.particle = function(color, opacity, position){
+  pJS.fn.particle = function(color, opacity, glow, position){
 
     /* size */
     this.radius = (pJS.particles.size.random ? Math.random() : 1) * pJS.particles.size.value;
@@ -312,6 +318,12 @@ var pJS = function(tag_id, params){
       }
     }
 
+    /* glow */
+    this.glow = {};
+    this.glow.width = (pJS.particles.glow.random ? Math.random() : 1) * pJS.particles.glow.width;
+    this.glow.intensity = (pJS.particles.glow.random ? Math.random() : 1) * pJS.particles.glow.intensity;
+    this.glow.color = hexToRgb(pJS.particles.glow.color);
+
     /* animation - velocity for speed */
     var velbase = {}
     switch(pJS.particles.move.direction){
@@ -363,7 +375,7 @@ var pJS = function(tag_id, params){
     this.vx_i = this.vx;
     this.vy_i = this.vy;
 
-    
+
 
     /* if shape is image */
 
@@ -392,7 +404,7 @@ var pJS = function(tag_id, params){
       }
     }
 
-    
+
 
   };
 
@@ -401,8 +413,27 @@ var pJS = function(tag_id, params){
 
     var p = this;
 
+    var glow_width = 0;
+    var glow_intensity = 0;
+    if (p.glow_bubble != undefined) {
+      glow_width = p.glow_bubble;
+      glow_intensity = pJS.particles.glow.intensity;
+    } else {
+      glow_width = p.glow.width;
+      glow_intensity = p.glow.intensity;
+    }
+
+    if(glow_width > 0 && glow_intensity > 0){
+
+      var gradient = pJS.canvas.ctx.createRadialGradient(p.x, p.y, glow_width, p.x, p.y, 0);
+      gradient.addColorStop(0, 'rgba('+p.glow.color.r+','+p.glow.color.g+','+p.glow.color.b+',0)');
+      gradient.addColorStop(1, 'rgba('+p.glow.color.r+','+p.glow.color.g+','+p.glow.color.b+','+glow_intensity+')');
+      pJS.canvas.ctx.fillStyle = gradient;
+      pJS.canvas.ctx.fillRect(p.x - glow_width, p.y - glow_width, glow_width * 2, glow_width * 2);
+    }
+
     if(p.radius_bubble != undefined){
-      var radius = p.radius_bubble; 
+      var radius = p.radius_bubble;
     }else{
       var radius = p.radius;
     }
@@ -491,15 +522,15 @@ var pJS = function(tag_id, params){
       pJS.canvas.ctx.lineWidth = pJS.particles.shape.stroke.width;
       pJS.canvas.ctx.stroke();
     }
-    
+
     pJS.canvas.ctx.fill();
-    
+
   };
 
 
   pJS.fn.particlesCreate = function(){
     for(var i = 0; i < pJS.particles.number.value; i++) {
-      pJS.particles.array.push(new pJS.fn.particle(pJS.particles.color, pJS.particles.opacity.value));
+      pJS.particles.array.push(new pJS.fn.particle(pJS.particles.color, pJS.particles.opacity.value, pJS.particles.glow));
     }
   };
 
@@ -664,7 +695,7 @@ var pJS = function(tag_id, params){
     pJS.tmp.count_svg = 0;
     pJS.fn.particlesEmpty();
     pJS.fn.canvasClear();
-    
+
     /* restart */
     pJS.fn.vendors.start();
 
@@ -684,14 +715,14 @@ var pJS = function(tag_id, params){
 
       var opacity_line = pJS.particles.line_linked.opacity - (dist / (1/pJS.particles.line_linked.opacity)) / pJS.particles.line_linked.distance;
 
-      if(opacity_line > 0){        
-        
+      if(opacity_line > 0){
+
         /* style */
         var color_line = pJS.particles.line_linked.color_rgb_line;
         pJS.canvas.ctx.strokeStyle = 'rgba('+color_line.r+','+color_line.g+','+color_line.b+','+opacity_line+')';
         pJS.canvas.ctx.lineWidth = pJS.particles.line_linked.width;
         //pJS.canvas.ctx.lineCap = 'round'; /* performance issue */
-        
+
         /* path */
         pJS.canvas.ctx.beginPath();
         pJS.canvas.ctx.moveTo(p1.x, p1.y);
@@ -725,7 +756,7 @@ var pJS = function(tag_id, params){
       p2.vy += ay;
 
     }
-    
+
 
   }
 
@@ -759,6 +790,7 @@ var pJS = function(tag_id, params){
         new pJS.fn.particle(
           pJS.particles.color,
           pJS.particles.opacity.value,
+          pJS.particles.glow,
           {
             'x': pos ? pos.pos_x : Math.random() * pJS.canvas.w,
             'y': pos ? pos.pos_y : Math.random() * pJS.canvas.h
@@ -799,13 +831,14 @@ var pJS = function(tag_id, params){
       function init(){
         p.opacity_bubble = p.opacity;
         p.radius_bubble = p.radius;
+        p.glow_bubble = p.glow.width;
       }
 
       /* mousemove - check ratio */
       if(dist_mouse <= pJS.interactivity.modes.bubble.distance){
 
         if(ratio >= 0 && pJS.interactivity.status == 'mousemove'){
-          
+
           /* size */
           if(pJS.interactivity.modes.bubble.size != pJS.particles.size.value){
 
@@ -843,6 +876,21 @@ var pJS = function(tag_id, params){
 
           }
 
+          /* glow */
+          if(pJS.interactivity.modes.bubble.glow != pJS.particles.glow.width){
+            if(pJS.interactivity.modes.bubble.glow > pJS.particles.glow.width){
+              var glow = pJS.interactivity.modes.bubble.glow*ratio;
+              if(glow > p.glow.width && glow <= pJS.interactivity.modes.bubble.glow){
+                p.glow_bubble = glow;
+              }
+            }else{
+              var glow = p.glow.width - (pJS.particles.glow.width-pJS.interactivity.modes.bubble.glow)*ratio;
+              if(glow < p.glow.width && glow >= pJS.interactivity.modes.bubble.glow){
+                p.glow_bubble = glow;
+              }
+            }
+          }
+
         }
 
       }else{
@@ -854,7 +902,7 @@ var pJS = function(tag_id, params){
       if(pJS.interactivity.status == 'mouseleave'){
         init();
       }
-    
+
     }
 
     /* on click event */
@@ -933,7 +981,7 @@ var pJS = function(tag_id, params){
           repulseRadius = pJS.interactivity.modes.repulse.distance,
           velocity = 100,
           repulseFactor = clamp((1/repulseRadius)*(-1*Math.pow(dist_mouse/repulseRadius,2)+1)*repulseRadius*velocity, 0, 50);
-      
+
       var pos = {
         x: p.x + normVec.x * repulseFactor,
         y: p.y + normVec.y * repulseFactor
@@ -946,7 +994,7 @@ var pJS = function(tag_id, params){
         p.x = pos.x;
         p.y = pos.y;
       }
-    
+
     }
 
 
@@ -1001,7 +1049,7 @@ var pJS = function(tag_id, params){
         // }else{
         //   process();
         // }
-        
+
 
       }else{
 
@@ -1009,7 +1057,7 @@ var pJS = function(tag_id, params){
 
           p.vx = p.vx_i;
           p.vy = p.vy_i;
-        
+
         }
 
       }
@@ -1039,7 +1087,7 @@ var pJS = function(tag_id, params){
           pJS.canvas.ctx.strokeStyle = 'rgba('+color_line.r+','+color_line.g+','+color_line.b+','+opacity_line+')';
           pJS.canvas.ctx.lineWidth = pJS.particles.line_linked.width;
           //pJS.canvas.ctx.lineCap = 'round'; /* performance issue */
-          
+
           /* path */
           pJS.canvas.ctx.beginPath();
           pJS.canvas.ctx.moveTo(p.x, p.y);
@@ -1155,7 +1203,7 @@ var pJS = function(tag_id, params){
         }
 
       });
-        
+
     }
 
 
@@ -1359,7 +1407,7 @@ var pJS = function(tag_id, params){
           pJS.fn.vendors.init();
           pJS.fn.vendors.draw();
         }
-        
+
       }
 
     }else{
@@ -1406,7 +1454,7 @@ var pJS = function(tag_id, params){
   pJS.fn.vendors.eventsListeners();
 
   pJS.fn.vendors.start();
-  
+
 
 
 };

@@ -16,6 +16,11 @@
         "width": 0,
         "color": "#000000"
       },
+      "glow": {
+        "width": 0,
+        "random": false,
+        "color": "#ffffff"
+      },
       "polygon": {
         "nb_sides": 5
       },
